@@ -5,8 +5,7 @@ import pandas as pd
 import numpy as np
 import dateutil
 
-from keras.models import Sequential
-from keras.layers import Dense
+
 
 # Workflow
 # 1.Create a neural network that can convert Celsius to Fahrenheit 
@@ -37,6 +36,11 @@ y_train = train['degrees_f']
 x_test = test.drop(['degrees_f'], axis=1)
 y_test = test['degrees_f']
 
+#------------------------------------------------------------------------------------------------------------#
+### 2.0 KERAS ----
+
+from keras.models import Sequential
+from keras.layers import Dense
 
 # Create a Sequential model
 model = Sequential()
@@ -58,8 +62,66 @@ model.compile(optimizer="adam", loss="mse")
 # Fit your model on your data for 30 epochs
 model.fit(x_train, y_train, epochs = 500)
 
-### Get model predicions 
+# Get model predicions 
 model.predict(x_test)
 test
 
 print("Check weight: {}".format(model.get_weights()))
+
+
+#------------------------------------------------------------------------------------------------------------#
+### 3.0 TENSORFLOW ----
+
+import tensorflow as tf
+print(tf.__version__)
+
+# Below are the key parts to the network:
+# - Sequential: We will want this to be a sequential network. For the most part, 
+# this is the default type. It just means that the data flows sequentially 
+# through all of the layers.
+# - Dense: This is the simplest layer available. For a deeper understanding you 
+# can check out the official documentation here
+# units: This specifies the number of neurons in the layer. In other words, this
+#  is the number of variables the layer has to learn.
+# input_shape: This specifies how many parameters that we will pass to our 
+# network. Since we are just going to send in the temperate in Celcius 
+# we only need 1.
+# - compile: We need to compile the network to be able to start using it.
+# - loss: This is the loss function. It is how the network is able to determin 
+# how far off the prediction is from the desired outcome.
+# - optimizer: This determines the way the internal values are adjusted to reduce 
+# the loss. For more information on the Adam optimizer go to the documentation
+#  here. 
+
+model = tf.keras.Sequential(
+    tf.keras.layers.Dense(units=1, input_shape=[1])
+)
+model.compile(loss='mean_squared_error', 
+              optimizer=tf.keras.optimizers.Adam(0.1))
+
+# Below are the key parts of the training code:
+# - history: These values are the results of the 
+# training. We will use these after to graph what 
+# we have done.
+# - fit: This is the method that does the training of 
+# the model. We are passing in our celsius data and 
+# also passing in our expected output (fahrenheit)
+#  data.
+# - epochs: This parameter specifies how many times 
+# this cycle should be run. 
+history = model.fit(x_train, y_train, epochs=500, verbose=True)
+
+import matplotlib.pyplot as plt
+plt.xlabel('Epoch')
+plt.ylabel('Loss')
+plt.plot(history.history['loss'])
+
+
+# Get model predicions 
+model.predict(x_test)
+test
+
+# Examine weights
+print("This is the weight that should be pretty close to the *1.8 in the formula: {}".format( model.layers[0].get_weights()[0][0] ))
+print("This is the bias that should be pretty close to the +32 in the formula: {}".format( model.layers[0].get_weights()[1] ))
+
