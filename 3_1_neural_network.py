@@ -22,6 +22,15 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 
 from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+
+pd.set_option('display.max_rows', 10)
+pd.set_option('display.max_columns', 10)
+pd.set_option('display.width', 100)
+
+
+np.set_printoptions(suppress=True)
+pd.set_option('display.float_format', lambda x: '%.5f' % x)
 
 # Workflow
 # 1.Create the training and testing datasets.
@@ -52,12 +61,24 @@ train, test = train_test_split(df_games,
                                random_state=1234)
 
 y_train = train.loc[:, ['Result']]
-x_train = train.loc[:, ['HomeScoreAverage', 'HomeDefenseAverage', 'AwayScoreAverage',
+train_data = train.loc[:, ['HomeScoreAverage', 'HomeDefenseAverage', 'AwayScoreAverage',
                         'AwayDefenseAverage']]
 
 y_test = test.loc[:, ['Result']]
-x_test = test.loc[:, ['HomeScoreAverage', 'HomeDefenseAverage', 'AwayScoreAverage',
+test_data = test.loc[:, ['HomeScoreAverage', 'HomeDefenseAverage', 'AwayScoreAverage',
                         'AwayDefenseAverage']]
+
+
+# standardize the train and test features
+sc = StandardScaler()
+x_train = pd.DataFrame(sc.fit_transform(train_data))
+x_test = pd.DataFrame(sc.transform(test_data))
+
+x_train.columns = train_data.columns
+x_test.columns = test_data.columns
+
+x_train.describe()
+x_test.describe()
 
 #------------------------------------------------------------------------------------------------------------#
 ### 3.0 NEURAL NETWORK ----
@@ -66,11 +87,11 @@ x_test = test.loc[:, ['HomeScoreAverage', 'HomeDefenseAverage', 'AwayScoreAverag
 model = Sequential()
 
 # Add dense layers
-model.add(Dense(16, input_shape=(x_train.shape[1],), activation = 'relu'))
-model.add(Dense(8, activation = 'relu'))
-model.add(Dense(4, activation = 'relu'))
+model.add(Dense(64, input_shape=(x_train.shape[1],), activation = 'relu'))
+model.add(Dense(32, activation = 'relu'))
+model.add(Dense(32, activation = 'relu'))
 
-model.add(Dense(1, activation = 'relu'))
+model.add(Dense(1))
 model.summary()
 
 # Compile your model
@@ -83,7 +104,7 @@ history = model.fit(x = x_train,
                     y = y_train, 
                     validation_split=0.2,
 	                epochs = 100, 
-                    batch_size = 32,
+                    batch_size = 92,
                     shuffle=True,
                     verbose = True)
 
